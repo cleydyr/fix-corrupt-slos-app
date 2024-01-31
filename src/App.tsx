@@ -1,95 +1,37 @@
 import { useState } from "react"
-
-interface SavedObject {
-  id: string;
-  attributes: object;
-}
-
-interface SavedObjectSearchResult {
-  saved_objects: SavedObject[]
-}
-
-function processCode(code: string): string | undefined {
-  try {
-    const searchResults = JSON.parse(code) as SavedObjectSearchResult;
-
-    const savedObjects = searchResults.saved_objects;
-
-    const commands = savedObjects.map((savedObject) => {
-      const { id, attributes } = savedObject;
-
-      const newAttributes = {
-          attributes: {
-              ...attributes,
-              groupBy: '*'
-          }
-      };
-
-      return `PUT kbn:/api/saved_objects/slo/${id}\n${JSON.stringify(newAttributes, null, 2)}\n\nPOST kbn:/api/observability/slos/${id}/_reset`;
-    });
-  
-    return commands.join("\n\n");
-  } catch (error) {
-    console.log(error);
-
-    return undefined;
-  }
-}
-
+import { processCode } from "./lib/process-code";
+import "./App.css"
 
 function App() {
   const [code, setCode] = useState("");
 
-  const output = code === "" ? "" : (processCode(code) ?? "Malformed JSON");
+  const output = code === "" ? "" : (processCode(code) ?? "Unexpected or malformed JSON");
 
   return (
     <>
-      <div style={{
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "center",
-          height: "100vh",
-          width: "100vw",
-        }}>
-          <div id="left_side_editor" style={{
-            height: "70%",
-            width: "50%",
-            paddingRight: "16px",
-          }}>
-            <h1>Input</h1>
-            <textarea style={
-              {
-                width: "100%",
-                height: "100%",
-                resize: "none",
-                fontFamily: "monospace",
-              }
-            }
+    <div className="header">
+      <h1>Corrupt SLO Fixer</h1>
+    </div>
+    <div className="main">
+      <div className="container">
+          <div className="column">
+            <h2>Input</h2>
+            <textarea
             onChange={(event) => {
               setCode(event.target.value);
-            }}>
-
-            </textarea>
+            }} />
           </div>
-          <div id="right_side_output" style={{
-            height: "70%",
-            width: "50%",
-          }}>
-            <h1>Output</h1>
-            <textarea style={
-              {
-                width: "100%",
-                height: "100%",
-                resize: "none",
-                fontFamily: "monospace",
-              }
-            }
-            disabled
-            value={output}>
-            </textarea>
-
+          <div className="column">
+            <h2>Output</h2>
+            <textarea
+              disabled
+              value={output} />
           </div>
         </div>
+    </div>
+    <div className="footer">
+      <p>🌻 by Cleydyr</p>
+    </div>
     </>
   )
 }
